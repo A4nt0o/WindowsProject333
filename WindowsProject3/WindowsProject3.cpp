@@ -17,6 +17,10 @@ HWND                hWnd;
 
 HDC hdcMem;
 
+HBITMAP     hbmMem;
+HANDLE      hOld;
+
+
 enum item_id { stick, sword, rubin };
 
 struct items {
@@ -57,6 +61,7 @@ struct {
     int hp;
     int dmg;
     std::vector<items> inventory;
+
 } player;
 
 void Init()
@@ -250,6 +255,21 @@ int currentImageIndex = 0;
 
 RECT rc;
 
+int x = 100;
+int y = 100;
+const int move = 50;
+
+//void HandleKeyPress(WPARAM key) {
+//    switch (key) {
+//    case VK_LEFT:
+//        x = -100;
+//        break;
+//    case VK_RIGHT:
+//        x = +100;
+//        break;
+//    }
+//}
+
 VOID OnPaint(HWND hWnd, LPPAINTSTRUCT lpPS)
 {
     /*RECT rc;
@@ -275,6 +295,7 @@ VOID OnPaint(HWND hWnd, LPPAINTSTRUCT lpPS)
     Gdiplus::Image image(L"Swamp.jpg");
     graphics.DrawImage(&image,0,0);
     */
+
     
     if (images.empty())
     {
@@ -283,7 +304,7 @@ VOID OnPaint(HWND hWnd, LPPAINTSTRUCT lpPS)
         images.push_back(new Gdiplus::Bitmap(L"cave.jpg"));
         images.push_back(new Gdiplus::Bitmap(L"Swamp.jpg"));
     }
-
+      
     Gdiplus::Graphics graphics(lpPS->hdc);
 
     auto dc = GetWindowDC(hWnd);
@@ -298,6 +319,8 @@ VOID OnPaint(HWND hWnd, LPPAINTSTRUCT lpPS)
     //graphics.DrawImage(currentImage, 0, 0);
     //graphics.DrawImage(img1, 0, 0);
 
+    
+
     if (currentImageIndex < images.size())
     {
         Gdiplus::Image* currentImage = images[currentImageIndex];
@@ -305,11 +328,18 @@ VOID OnPaint(HWND hWnd, LPPAINTSTRUCT lpPS)
         RECT rc;
         GetClientRect(hWnd, &rc);
 
-        graphics.DrawImage(currentImage,0, 0,rc.right - rc.left,rc.bottom - rc.top);
+        graphics.DrawImage(images[currentImageIndex],0, 0,rc.right - rc.left,rc.bottom - rc.top);
+
+        graphics.DrawImage(images[1], x, y, 88, 88);
     }
+
+
+
 }
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+
+
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
 {
@@ -332,6 +362,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
     wndClass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
     wndClass.lpszMenuName = NULL;
     wndClass.lpszClassName = TEXT("GettingStarted");
+    wndClass.hbrBackground = NULL;
+
 
     RegisterClass(&wndClass);
 
@@ -361,22 +393,39 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, INT iCmdShow)
     return msg.wParam;
 }  // WinMain
 
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     WPARAM wParam, LPARAM lParam)
 {
     HDC          hdc;
     PAINTSTRUCT  ps;
 
+
+    
+
     switch (message)
     {
-    case WM_PAINT:
 
+    case WM_TIMER:
+        
+    switch (1)
+    {
+    case 1:
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
+    }
+
+    case WM_CREATE:
+    SetTimer(hWnd, 1, 700, NULL);
+    break;
+
+    case WM_PAINT:
         BeginPaint(hWnd, &ps);
         OnPaint(hWnd, &ps);
         EndPaint(hWnd, &ps);
         return 0;
     case WM_ERASEBKGND:
-        return (LRESULT)1; // Say we handled it.
+        return 1; 
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
@@ -391,5 +440,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         }
         break;
 
+    case WM_KEYDOWN:
+        switch (wParam) 
+        {
+        case VK_LEFT:
+            x -= move;
+            break;
+        case VK_RIGHT:
+            x += move;
+            break;
+        case VK_UP:
+            y -= move;
+            break;
+        case VK_DOWN:
+            y += move;
+            break;
+        }
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
     }
 }
